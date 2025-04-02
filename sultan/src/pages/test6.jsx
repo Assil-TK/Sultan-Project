@@ -29,15 +29,15 @@ function ChatInterface() {
     };
 
     setMessages([...messages, newMessage]);
-    setUserMessage(""); // Clear input field after sending message
+    setUserMessage(""); 
 
-    // Send the message to your Flask API
+    // Send msg to Flask API
     setIsTyping(true);
     processMessageToFlask([...messages, newMessage]);
   };
 
   const processMessageToFlask = async (chatMessages) => {
-    // Format messages for the Flask API
+    // Format msg for the Flask API
     const apiMessages = chatMessages.map((messageObject) => {
       let role = messageObject.sender === "Qwen" ? "assistant" : "user";
       return { role: role, content: messageObject.message };
@@ -49,10 +49,10 @@ function ChatInterface() {
 
     try {
       const response = await axios.post(
-        'https://sultan-api-zrhp.onrender.com/generate', // Replace with your Flask API endpoint
+        'https://sultan-api-zrhp.onrender.com/generate',
         apiRequestBody
       );
-      const modelReply = response.data.response; // Adjust based on your Flask response format
+      const modelReply = response.data.response; 
       setMessages([...chatMessages, { message: modelReply, sender: "Qwen" }]);
       setIsTyping(false);
     } catch (error) {
@@ -77,8 +77,8 @@ function ChatInterface() {
     >
       <Box
         sx={{
-          height: '500px', // Increased height
-          width: '700px', // Increased width
+          height: '500px', 
+          width: '700px', 
           display: 'flex',
           flexDirection: 'column',
           p: 2,
@@ -125,8 +125,8 @@ function ChatInterface() {
                     backgroundColor: message.sender === 'Qwen' ? '#F0F0F0' : '#1B374C',
                     padding: '8px',
                     borderRadius: 1,
-                    wordBreak: 'break-word', // Ensure long text breaks to fit in container
-                    whiteSpace: 'normal', // Allow the text to wrap properly
+                    wordBreak: 'break-word', 
+                    whiteSpace: 'normal', 
                   }}
                 >
                   <Typography
