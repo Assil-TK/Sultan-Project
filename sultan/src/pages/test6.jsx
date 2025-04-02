@@ -1,114 +1,191 @@
-import React from 'react';
-import { AppBar, Toolbar, Button, Box, Typography, Card, CardContent, CardMedia, Grid, ButtonBase } from '@mui/material';
-import logo from '../assets/effia.png'; 
-import Hero from '../assets/hero.png';
-import centreVille from '../assets/centre.jpg';
-import culturel from '../assets/cult.jpg';
-import voirie from '../assets/roul.jpg';
-import ParkingImage from '../assets/services.jpg';
+import { useState } from 'react';
+import { Box, TextField, Typography, CircularProgress } from '@mui/material';
+import axios from 'axios';
+import '@chatscope/chat-ui-kit-styles/dist/default/styles.min.css';
 
-const parkingOptions = [
-  { title: 'Parking De Centre-Ville', description: 'Parking du Centre, Parking Cathédrale, Parking Laderoute...', image: centreVille },
-  { title: 'Parking « Culturel »', description: 'Parking IPO, Parking Kinopolis...', image: culturel },
-  { title: 'Parking De Voirie', description: 'Stationnement dans la ville de Braine-le-Comte, Stationnement dans la ville de Roussel...', image: voirie },
-];
+const SYSTEM_MESSAGE = { 
+  "role": "system", 
+  "content": "you only generate react code no extra text"
+};
 
-const Header = () => (
-  <AppBar position="fixed" sx={{ backgroundColor: '#1B374C', borderBottom: '5px solid #F39325' }}>
-    <Toolbar>
-      <Box component="img" src={logo} alt="EFFIA Logo" sx={{ height: 20 }} />
-      <Box sx={{ flexGrow: 1 }} />
-      <Button color="inherit" sx={{ fontFamily: 'Fira Sans, sans-serif' }}>QUI SOMMES NOUS ?</Button>
-      <Button variant="outlined" color="inherit" sx={{ marginLeft: 2 }}>FR +</Button>
-    </Toolbar>
-  </AppBar>
-);
+function ChatInterface() {
+  const [messages, setMessages] = useState([
+    {
+      message: "Hello, I'm here to help! Ask me anything.",
+      sentTime: "just now",
+      sender: "Qwen"
+    }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [userMessage, setUserMessage] = useState("");
 
-const HeroSection = () => (
-  <Box
-    sx={{
-      width: '100%',
-      height: '480px',
-      backgroundImage: `url(${Hero})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#FFFFFF',
-    }}
-  >
-    <Typography variant="h4" sx={{ fontFamily: 'Fira Sans, sans-serif' }}>Bienvenue dans nos parkings</Typography>
-  </Box>
-);
+  const handleSendMessage = () => {
+    if (!userMessage.trim()) return;
 
-const ParkingOptions = () => (
-  <Box sx={{ padding: '6% 8% 3%', textAlign: 'center', fontFamily: 'Fira Sans, sans-serif' }}>
-    <Typography variant="h4" gutterBottom>Réservez votre place ou souscrivez un abonnement dans le parking qui vous convient</Typography>
-    <Grid container spacing={4} justifyContent="center" padding={5}>
-      {parkingOptions.map((option, index) => (
-        <Grid item xs={12} sm={6} md={4} key={index}>
-          <ButtonBase sx={{ width: '100%', borderRadius: '10px' }}>
-            <Card sx={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', transition: 'transform 0.3s ease-in-out', '&:hover': { transform: 'scale(1.05)' } }}>
-              <CardMedia component="img" alt={option.title} height="200" image={option.image} title={option.title} />
-              <CardContent>
-                <Typography variant="h6" gutterBottom>{option.title}</Typography>
-                <Typography variant="body2" color="text.secondary">{option.description}</Typography>
-              </CardContent>
-            </Card>
-          </ButtonBase>
-        </Grid>
-      ))}
-    </Grid>
-  </Box>
-);
+    const newMessage = {
+      message: userMessage,
+      sentTime: "just now",
+      sender: "User"
+    };
 
-const ServicesSection = () => (
-  <Box
-    sx={{
-      width: '100%',
-      height: '500px',
-      backgroundImage: `url(${ParkingImage})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: '#FFFFFF',
-      textAlign: 'center',
-    }}
-  >
-    <Box sx={{ zIndex: 1, padding: '20px' }}>
-      <Typography variant="h4" gutterBottom>
-        EFFIA, acteur majeur du stationnement en Belgique.
-      </Typography>
-      <Typography variant="body1">
-        EFFIA, filiale du groupe Keolis, s'installe au cœur des enjeux de la mobilité. Près de nos clients, nous facilitons leurs déplacements.
-      </Typography>
-      <Box sx={{ padding: '4% 0', display: 'flex', justifyContent: 'center' }}>
-        {[['38', 'villes'], ['81', 'parkings'], ['44 220', 'places']].map(([number, label], i) => (
-          <Box key={i} sx={{ margin: '0 10px', textAlign: 'center' }}>
-            <Typography variant="h5">{number}</Typography>
-            <Typography variant="body1">{label}</Typography>
+    setMessages([...messages, newMessage]);
+    setUserMessage(""); // Clear input field after sending message
+
+    // Send the message to your Flask API
+    setIsTyping(true);
+    processMessageToFlask([...messages, newMessage]);
+  };
+
+  const processMessageToFlask = async (chatMessages) => {
+    // Format messages for the Flask API
+    const apiMessages = chatMessages.map((messageObject) => {
+      let role = messageObject.sender === "Qwen" ? "assistant" : "user";
+      return { role: role, content: messageObject.message };
+    });
+
+    const apiRequestBody = {
+      prompt: apiMessages.map((msg) => msg.content).join("\n"),
+    };
+
+    try {
+      const response = await axios.post(
+        'https://sultan-api-zrhp.onrender.com/generate', // Replace with your Flask API endpoint
+        apiRequestBody
+      );
+      const modelReply = response.data.response; // Adjust based on your Flask response format
+      setMessages([...chatMessages, { message: modelReply, sender: "Qwen" }]);
+      setIsTyping(false);
+    } catch (error) {
+      console.error("Error:", error);
+      setMessages([
+        ...chatMessages,
+        { message: "Error occurred while fetching data.", sender: "Qwen" }
+      ]);
+      setIsTyping(false);
+    }
+  };
+
+  return (
+    <Box
+      sx={{
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F5F5F6',
+      }}
+    >
+      <Box
+        sx={{
+          height: '500px', // Increased height
+          width: '700px', // Increased width
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          backgroundColor: '#F5F5F6',
+          borderRadius: 2,
+          boxShadow: 3,
+          fontFamily: '"Fira Sans", sans-serif',
+        }}
+      >
+        <Typography
+          variant="h5"
+          align="center"
+          sx={{ mb: 2, color: '#1B374C' }}
+        >
+          Chat with Sultan
+        </Typography>
+
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            mb: 2,
+            p: 2,
+            border: '1px solid #ccc',
+            borderRadius: 1,
+            backgroundColor: '#FFFFFF',
+          }}
+        >
+          {messages.map((message, i) => (
+            <Box
+              key={i}
+              sx={{
+                mb: 2,
+                display: 'flex',
+                flexDirection: message.sender === 'Qwen' ? 'row' : 'row-reverse',
+              }}
+            >
+              <Box sx={{ maxWidth: '70%', display: 'flex', flexDirection: 'column', wordBreak: 'break-word' }}>
+                <Typography variant="body2" color="textSecondary">
+                  {message.sender}
+                </Typography>
+                <Box
+                  sx={{
+                    backgroundColor: message.sender === 'Qwen' ? '#F0F0F0' : '#1B374C',
+                    padding: '8px',
+                    borderRadius: 1,
+                    wordBreak: 'break-word', // Ensure long text breaks to fit in container
+                    whiteSpace: 'normal', // Allow the text to wrap properly
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    color={message.sender === 'Qwen' ? 'textSecondary' : '#FFFFFF'}
+                  >
+                    {message.message}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          ))}
+          {isTyping && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+              <CircularProgress size={24} sx={{ color: '#F39325' }} />
+            </Box>
+          )}
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField
+            label="Type a message"
+            variant="outlined"
+            fullWidth
+            value={userMessage}
+            onChange={(e) => setUserMessage(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            sx={{
+              backgroundColor: '#FFFFFF',
+              '& .MuiOutlinedInput-root': {
+                borderColor: '#1B374C',
+              },
+              '& .MuiOutlinedInput-input': {
+                color: '#000000',
+              },
+              '& .MuiFormLabel-root': {
+                color: '#1B374C',
+              },
+            }}
+          />
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography
+              variant="h6"
+              sx={{
+                cursor: 'pointer',
+                color: '#F39325',
+                '&:hover': {
+                  color: '#1B374C',
+                },
+              }}
+              onClick={handleSendMessage}
+            >
+              Send
+            </Typography>
           </Box>
-        ))}
+        </Box>
       </Box>
-      <Button variant="outlined" sx={{ marginTop: '20px', borderColor: '#FFFFFF', color: '#FFFFFF' }}>
-        DÉCOUVREZ TOUS NOS SERVICES
-      </Button>
     </Box>
-  </Box>
-);
+  );
+}
 
-
-
-const HomePage = () => (
-  <>
-    <Header />
-    <HeroSection />
-    <ParkingOptions />
-    <ServicesSection />
-  </>
-);
-
-export default HomePage;
+export default ChatInterface;
