@@ -29,9 +29,9 @@ const ParkingOptions = () => {
       <Typography variant="h4" gutterBottom>
         Réservez votre place ou souscrivez un abonnement dans le parking qui vous convient
       </Typography>
-      <Grid container spacing={4} justifyContent="center" padding={5} alignItems="stretch"> {/* Reduced padding */}
+      <Grid container spacing={4} justifyContent="space-between" padding={5} alignItems="stretch"> {/* Changed justifyContent and reduced padding */}
         {parkingOptions.map((option, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index} sx={{ display: 'flex' }}>
+          <Grid item key={index} sx={{ width: '30%', display: 'flex' }}>
             <ButtonBase sx={{ width: '100%', borderRadius: '10px', flexGrow: 1 }}>
               <Card sx={{ 
                 display: 'flex', 
@@ -71,5 +71,3 @@ const ParkingOptions = () => {
 };
 
 export default ParkingOptions;
-
-
