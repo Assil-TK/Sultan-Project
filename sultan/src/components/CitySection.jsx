@@ -22,6 +22,9 @@ const CitySection = () => {
 
   return (
     <Box sx={{ padding: '4% 6% 8%', textAlign: 'center' }}>
+      <Typography variant="h2" sx={{ fontFamily: 'Fira Sans', color: '#1B374C', padding: '1%' }}>
+        Bonjour
+      </Typography>
       <Typography variant="h4" padding='3%' gutterBottom>
         Découvrez nos parkings dans ces villes
       </Typography>
@@ -36,7 +39,7 @@ const CitySection = () => {
             padding: '5px',
             borderRadius: '50%',
             backgroundColor: 'rgba(255, 255, 255, 0.3)',
-            color: 'blue',
+            color: 'red',
           }}
         >
           ←
@@ -63,7 +66,6 @@ const CitySection = () => {
                 '&:hover': {
                   transform: 'scale(1.03)', // Slight zoom effect on hover
                 },
-               
               }}
             >
               <Card sx={{ minWidth: '200px', cursor: 'pointer' }}>
@@ -107,4 +109,3 @@ const CitySection = () => {
 };
 
 export default CitySection;
-
